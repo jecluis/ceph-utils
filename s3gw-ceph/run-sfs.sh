@@ -89,7 +89,7 @@ if [[ "${backend}" == "dbstore" ]]; then
 fi
 
 maybe_gdb() {
-	if [[ -n "${with_gdb}" ]]; then
+	if [[ ${with_gdb} -eq 1 ]]; then
 		gdb --args $*
 	else
 		$*
