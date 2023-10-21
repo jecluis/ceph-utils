@@ -2,7 +2,15 @@
 
 usage() {
   cat <<EOF
-usage: $0 [--no-clang]
+usage: $0 [OPTIONS]
+
+OPTIONS:
+  -c | --config FILE  Use specified config file.
+  --no-clang          Build using g++ instead of clang
+  -h | --help         Show this message.
+
+ENV VARS:
+  S3GW_CCACHE_DIR   Specifies the location of ccache.
 EOF
 }
 
@@ -27,12 +35,52 @@ WITH_UBSAN=${WITH_UBSAN:-"OFF"}
 CC=${CC:-"/usr/bin/clang"}
 CXX=${CXX:-"/usr/bin/clang++"}
 
-if [[ $# -gt 0 && "${1}" == "--no-clang" ]]; then
+no_clang=0
+config_file=
+
+while [[ $# -gt 0 ]]; do
+
+  case $1 in
+    -c|--config)
+      config_file="${2}"
+      shift 1
+      ;;
+    --no-clang)
+      no_clang=1
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "error: unknown option '${1}'" >/dev/stderr
+      exit 1
+      ;;
+  esac
+  shift 1
+
+done
+
+if [[ -n "${config_file}" ]]; then
+  if [[ -e "${config_file}" ]]; then
+    source ${config_file}
+  else
+    echo "error: config file at '${config_file}' does not exist!" >/dev/stderr
+    exit 1
+  fi
+fi
+
+if [[ $no_clang -eq 1 ]]; then
   CC="gcc-13"
   CXX="g++-13"
 fi
 
-export CCACHE_DIR=/home/joao/aquarist-labs/.s3gw-ceph-ccache
+if [[ -z "${S3GW_CCACHE_DIR}" ]]; then
+  echo "error: S3GW_CCACHE_DIR not set!" >/dev/stderr
+  exit 1
+fi
+
+export CCACHE_DIR=${S3GW_CCACHE_DIR}
 ARGS=(
   "-GNinja"
   "-DCMAKE_C_COMPILER=${CC}"
@@ -62,5 +110,14 @@ ARGS=(
   "-DWITH_UBSAN=${WITH_UBSAN}"
 #  "-DWITH_MGR=OFF"
 )
+
+echo "----- Prepare build -----"
+echo "CCACHE DIR: ${S3GW_CCACHE_DIR}"
+echo
+for var in ${ARGS[@]} ; do
+  echo ${var}
+done
+echo "--------------------------"
+echo
 
 ./do_cmake.sh ${ARGS[@]} || exit 1
