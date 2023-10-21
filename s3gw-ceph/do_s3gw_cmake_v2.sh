@@ -2,7 +2,7 @@
 
 usage() {
   cat <<EOF
-usage: $0 [--clang]
+usage: $0 [--no-clang]
 EOF
 }
 
@@ -24,12 +24,12 @@ WITH_TSAN=${WITH_TSAN:-"OFF"}
 WITH_UBSAN=${WITH_UBSAN:-"OFF"}
 
 
-CC=${CC:-"gcc-13"}
-CXX=${CXX:-"g++-13"}
+CC=${CC:-"/usr/bin/clang"}
+CXX=${CXX:-"/usr/bin/clang++"}
 
-if [[ $# -gt 0 && "${1}" == "--clang" ]]; then
-  CC="/usr/bin/clang"
-  CXX="/usr/bin/clang++"
+if [[ $# -gt 0 && "${1}" == "--no-clang" ]]; then
+  CC="gcc-13"
+  CXX="g++-13"
 fi
 
 export CCACHE_DIR=/home/joao/aquarist-labs/.s3gw-ceph-ccache
