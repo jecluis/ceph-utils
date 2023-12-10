@@ -40,6 +40,7 @@ fi
 
 # options
 #
+with_tests=0        # prepare build with (forced) tests
 run_with_build=0    # build before running
 force=0             # force operation (for prepare, blow existing build dir)
 
@@ -64,6 +65,7 @@ OPTIONS:
  for 'prepare':
   -f | --force        Forces preparing the build, removing existing build
                       if necessary.
+  -t | --with-tests   Build with tests.
 
  for 'run':
   -b | --build        Builds before running.
@@ -160,6 +162,12 @@ prepare() {
     fi
   fi
 
+
+  if [[ $with_tests -eq 1 ]]; then
+    # force building tests, even if config states otherwise.
+    export WITH_TESTS="ON"
+  fi
+
   ${tool_do_cmake} ${extra_args} || exit 1
 }
 
@@ -173,7 +181,11 @@ build() {
     exit 1
   fi
 
-  ${tool_run_sfs} --build-only ${extra_args} || exit 1
+  with_tests_arg=
+  [[ $with_tests -eq 1 ]] && with_tests_arg="--with-tests"
+
+  ${tool_run_sfs} --build-only ${with_tests_arg} ${extra_args} \
+    || exit 1
 }
 
 run() {
@@ -199,7 +211,10 @@ run() {
     exit 1
   fi
 
-  ${tool_run_sfs} --no-build ${extra_args} || exit 1
+  with_tests_arg=
+  [[ $with_tests -eq 1 ]] && with_tests_arg="--with-tests"
+
+  ${tool_run_sfs} --no-build ${with_tests_arg} ${extra_args} || exit 1
 }
 
 
@@ -219,12 +234,21 @@ while [[ $# -gt 0 ]]; do
       config_file="${2}"
       shift 1
       ;;
+    # args for run
+    #
     -b|--build)
       run_with_build=1
       ;;
+    # args for prepare
+    #
     -f|--force)
       force=1
       ;;
+    -t|--with-tests)
+      with_tests=1
+      ;;
+    # help
+    #
     -h|--help)
       usage
       exit 0
