@@ -1,0 +1,17 @@
+CompileFlags:
+  Add:
+    - -std=c++20
+    - -Wall
+    - -I/home/joao/code/aquarist-labs/ceph.git/src
+    - -I/home/joao/code/aquarist-labs/ceph.git/src/rgw
+    - -I/home/joao/code/aquarist-labs/ceph.git/src/rgw/driver/rados
+    - -I/home/joao/code/aquarist-labs/ceph.git/src/rgw/driver/sfs
+    - -I/home/joao/code/aquarist-labs/ceph.git/src/test
+    - -I/home/joao/code/aquarist-labs/ceph.git/build/include
+    - -I/home/joao/code/aquarist-labs/ceph.git/src/build/boost/include
+    - -I/home/joao/code/aquarist-labs/ceph.git/src/rapidjson/include
+    - -I/home/joao/code/aquarist-labs/ceph.git/src/spawn/include
+    - -I/home/joao/code/aquarist-labs/ceph.git/src/opentelemetry-cpp/api/include
+    - -I/usr/include/lua5.4
+
+  
