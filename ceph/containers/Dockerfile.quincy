@@ -1,0 +1,40 @@
+FROM quay.io/centos/centos:stream9 AS ceph-dev-quincy-base
+
+RUN mkdir /tools
+RUN mkdir /tools/cub
+RUN mkdir /ceph
+
+ADD ./ceph.spec.in /tools/ceph.spec.in
+COPY ./install-deps.sh /tools/
+
+RUN dnf update
+RUN dnf config-manager --set-enabled crb
+
+WORKDIR /tools
+RUN ./install-deps.sh
+RUN rm ./install-deps.sh ./ceph.spec.in
+
+VOLUME /tools/cub
+VOLUME /ceph
+
+FROM ceph-dev-quincy-base
+
+RUN dnf update
+RUN dnf install -y git clang15 ccache hostname iproute jq \
+    python3-cherrypy python3-jwt python3-bcrypt python3-routes
+
+RUN ln -fs \
+  /usr/lib/python3.9/site-packages/jaraco_text-4.0.0.dist-info \
+  /usr/lib/python3.9/site-packages/jaraco.text-4.0.0.dist-info
+
+RUN ln -fs \
+  /usr/lib/python3.9/site-packages/jaraco-functools-3.5.0-py3.9.egg-info \
+  /usr/lib/python3.9/site-packages/jaraco_functools-3.5.0-py3.9.egg-info
+
+
+
+RUN mkdir /ccache
+
+VOLUME /ccache
+
+ENTRYPOINT ["/tools/cub/cub-ctr.sh"]
