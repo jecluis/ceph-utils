@@ -180,7 +180,7 @@ run_do_build() {
   /tools/cub/cub.sh -c /tmp/cub-ctr-build.cfg build
 }
 
-run_ctr() {
+run_ctr_vstart() {
   local cephdir="${PWD}"
   [[ -z "${release_name}" ]] &&
     echo "error: missing release name" >/dev/stderr && exit 1
@@ -202,10 +202,10 @@ run_ctr() {
     --security-opt label=disable \
     --volume "${cephdir}":/ceph \
     --volume "${ourdir}":/tools/cub \
-    "${img}" do-run
+    "${img}" do-run-vstart
 }
 
-run_vstart() {
+do_run_vstart() {
   pushd /ceph
 
   [[ ! -d "build" ]] &&
@@ -217,6 +217,32 @@ run_vstart() {
 
   echo "run infinitely"
   sleep infinity
+}
+
+run_ctr_exec() {
+  local cephdir="${PWD}"
+  [[ -z "${release_name}" ]] &&
+    echo "error: missing release name" >/dev/stderr && exit 1
+  [[ -z "${release_version}" ]] &&
+    echo "error: missing release version" >/dev/stderr && exit 1
+
+  [[ ! -e "${cephdir}/ceph.spec.in" ]] &&
+    echo "error: current directory is not a ceph source directory" \
+      >/dev/stderr &&
+    exit 1
+
+  [[ ! -d "${cephdir}/build" ]] &&
+    echo "error: ceph hasn't been built yet" >/dev/stderr && exit 1
+
+  img="cub-dev/${release_name}:${release_version}"
+
+  podman run -it \
+    --userns=keep-id \
+    --security-opt label=disable \
+    --volume "${cephdir}":/ceph \
+    --volume "${ourdir}":/tools/cub \
+    --entrypoint "/bin/bash" \
+    "${img}"
 }
 
 main() {
@@ -270,8 +296,11 @@ main() {
   build)
     run_ctr_build
     ;;
-  run)
-    run_ctr
+  run-vstart)
+    run_ctr_vstart
+    ;;
+  exec)
+    run_ctr_exec
     ;;
   do-prepare)
     run_do_prepare
@@ -279,7 +308,7 @@ main() {
   do-build)
     run_do_build
     ;;
-  do-run)
+  do-run-vstart)
     run_vstart
     ;;
   *)
